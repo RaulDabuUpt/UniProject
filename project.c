@@ -30,13 +30,13 @@ void create_symbolic_link(char* path) {
     char link_name[100];
     printf("Enter a name for the symbolic link: ");
     if (fgets(link_name, sizeof(link_name), stdin) == NULL) {
-        fprintf(stderr, "Error: Failed to read input\n");
+        fprintf(stderr, "Failed to read input\n");
         return;
     }
     // Remove newline character from link_name if present
     link_name[strcspn(link_name, "\n")] = '\0';
     if (symlink(path, link_name) == -1) {
-        fprintf(stderr, "Error: Failed to create symbolic link\n");
+        fprintf(stderr, "Failed to create symbolic link\n");
         return;
     }
     printf("Symbolic link created successfully\n");
@@ -144,6 +144,7 @@ void execute_symbolic_link_option(char option, char* path) {
 
     switch (option) {
         case 'n':
+			//Name of file
             printf("%s\n", path);
             break;
 
@@ -157,10 +158,6 @@ void execute_symbolic_link_option(char option, char* path) {
 
         case 'd':
             // Size of symbolic link
-            if (!S_ISLNK(sb.st_mode)) {
-                printf("Not a symbolic link\n");
-                return;
-            }
             printf("%ld\n", target_size);
             break;
 
@@ -265,9 +262,10 @@ void display_directory_menu(char* path) {
 void display_symbolic_link_menu(char* path) {
     printf("Options:\n");
     printf("-n: display name of file\n");
-    printf("-d: display file size\n");
+    printf("-d: display symbolic link size\n");
     printf("-a: display access rights\n");
-    printf("-c: number of files with .c extension\n");
+    printf("-t: display size of target file\n");
+	printf("-l: delete symbolic link\n");
     printf("Enter options as a single string (e.g., -nhd): ");
     char options[10];
     fgets(options, sizeof(options), stdin);
@@ -277,7 +275,7 @@ void display_symbolic_link_menu(char* path) {
     char option;
     for(i = 1; i <strlen(options); i++) {
         option = options[i];
-        if(!(strchr("ndac", option))){
+        if(!(strchr("nldta", option))){
             check = 0;
             break;
         }
