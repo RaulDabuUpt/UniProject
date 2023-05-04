@@ -46,7 +46,8 @@ void print_error_message(char* message) {
 }
 
 void execute_regular_file_option(char option, char* path) {
-    struct stat sb;
+	
+	struct stat sb;
     if (stat(path, &sb) == -1) {
         perror("Failed to get file information");
     }
@@ -303,15 +304,37 @@ void display_file_info(char* path) {
     switch (sb.st_mode & S_IFMT) {
         case S_IFREG: // regular file
             printf("File type: regular file\n");
+			//fork here
+			//2nd fork here
+			//first process if here
             display_regular_file_menu(path);
+			//2nd process if here
+			//if check for .c extension
+			//execute .c program
+			//get back error number
+			//get back warning number
+			//else write number of lines
+			//if .c extension compute score based on error and warning number
             break;
         case S_IFDIR: // directory
             printf("File type: directory\n");
+			//fork here
+			//2nd fork here
+			//first process if here
             display_directory_menu(path);
+			//2nd process if here
+			//Create  <dir_name>_file.txt
+			//wait for process to end
             break;
         case S_IFLNK: // symbolic link
             printf("File type: symbolic link\n");
+			//fork here
+			//2nd fork here
+			//first process if here
             display_symbolic_link_menu(path);
+			//2nd process if here
+			//change execution rights here
+			//wait for process to end here
             break;
         default:
             printf("File type: unknown\n");
