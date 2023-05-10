@@ -9,6 +9,62 @@
 #include <errno.h>
 #include <libgen.h>
 #include <time.h>
+#include <wait.h>
+
+void execute_script(const char* filename) {
+    // Execute script for regular file with .c extension
+    // Compile the file and print the number of errors and warnings
+    char command[100];
+    snprintf(command, sizeof(command), "gcc -o %s.out -Wall -Wextra %s 2>&1", filename, filename);
+
+    FILE* fp = popen(command, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Failed to execute the script.\n");
+        exit(1);
+    }
+
+    char output[1000];
+    if (fgets(output, sizeof(output), fp) != NULL) {
+        int numErrors = 0;
+        int numWarnings = 0;
+
+        // Parse the output to count errors and warnings
+        char* errorLine = strstr(output, "error:");
+        char* warningLine = strstr(output, "warning:");
+        while (errorLine != NULL) {
+            numErrors++;
+            errorLine = strstr(errorLine + 1, "error:");
+        }
+        while (warningLine != NULL) {
+            numWarnings++;
+            warningLine = strstr(warningLine + 1, "warning:");
+        }
+
+        // Compute the score based on the number of errors and warnings
+        int score;
+        if (numErrors == 0 && numWarnings == 0)
+            score = 10;
+        else if (numErrors > 0)
+            score = 1;
+        else if (numWarnings > 10)
+            score = 2;
+        else
+            score = 2 + 8 * (10 - numWarnings) / 10;
+
+        // Print the score
+        printf("%s: %d\n", filename, score);
+        // Write the score to grades.txt
+        FILE* gradesFile = fopen("grades.txt", "a");
+        if (gradesFile == NULL) {
+            fprintf(stderr, "Failed to open grades.txt for writing.\n");
+            exit(1);
+        }
+        fprintf(gradesFile, "%s: %d\n", filename, score);
+        fclose(gradesFile);
+    }
+
+    pclose(fp);
+}
 
 
 void print_access_rights(mode_t mode) {
@@ -301,40 +357,94 @@ void display_file_info(char* path) {
         print_error_message("Failed to get file information");
         return;
     }
+    int status;
     switch (sb.st_mode & S_IFMT) {
         case S_IFREG: // regular file
             printf("File type: regular file\n");
-			//fork here
-			//2nd fork here
-			//first process if here
-            display_regular_file_menu(path);
-			//2nd process if here
-			//if check for .c extension
-			//execute .c program
-			//get back error number
-			//get back warning number
-			//else write number of lines
-			//if .c extension compute score based on error and warning number
+			display_regular_file_menu(path);
+			 if (strstr(path, ".c") != NULL) {
+                pid_t child_pid2 = fork();
+                if (child_pid2 < 0) {
+                    fprintf(stderr, "Failed to create child process.\n");
+                    return;
+                } else if (child_pid2 == 0) {
+                    // Child process
+                    execute_script(path);
+                    exit(0);
+                }
+                // Parent process
+                waitpid(child_pid2, &status, 0);
+                if (WIFEXITED(status)) {
+                    int exit_code = WEXITSTATUS(status);
+                    printf("The process with PID %d has ended with exit code %d.\n", child_pid2, exit_code);
+                }
+            } else {
+                // Count number of lines
+                FILE* file = fopen(path, "r");
+                if (file == NULL) {
+                    fprintf(stderr, "Failed to open the file.\n");
+                    return;
+                }
+
+                int lineCount = 0;
+                char ch;
+                while ((ch = fgetc(file)) != EOF) {
+                    if (ch == '\n') {
+                        lineCount++;
+                    }
+                }
+
+                fclose(file);
+
+                printf("Number of lines: %d\n", lineCount);
+            }
             break;
         case S_IFDIR: // directory
             printf("File type: directory\n");
-			//fork here
-			//2nd fork here
-			//first process if here
             display_directory_menu(path);
-			//2nd process if here
-			//Create  <dir_name>_file.txt
-			//wait for process to end
+			pid_t child_pid3 = fork();
+            if (child_pid3 < 0) {
+                fprintf(stderr, "Failed to create child process.\n");
+                return;
+            } else if (child_pid3 == 0) {
+                // Child process
+                char filename[100];
+                snprintf(filename, sizeof(filename), "%s_file.txt", path);
+                char command[100];
+                snprintf(command, sizeof(command), "touch %s", filename);
+                system(command);
+                exit(0);
+            }
+
+            // Parent process
+            waitpid(child_pid3, &status, 0);
+            if (WIFEXITED(status)) {
+                int exit_code = WEXITSTATUS(status);
+                printf("The process with PID %d has ended with exit code %d.\n", child_pid3, exit_code);
+            }
             break;
         case S_IFLNK: // symbolic link
             printf("File type: symbolic link\n");
-			//fork here
-			//2nd fork here
-			//first process if here
             display_symbolic_link_menu(path);
-			//2nd process if here
-			//change execution rights here
-			//wait for process to end here
+			pid_t child_pid4 = fork();
+            if (child_pid4 < 0) {
+                fprintf(stderr, "Failed to create child process.\n");
+                return;
+            } else if (child_pid4 == 0) {
+                // Child process
+                char command[100];
+                snprintf(command, sizeof(command), "chmod 700 %s", path);
+                system(command);
+                exit(0);
+            }
+
+            // Parent process
+            waitpid(child_pid4, &status, 0);
+            if (WIFEXITED(status)) {
+                int exit_code = WEXITSTATUS(status);
+                printf("The process with PID %d has ended with exit code %d.\n", child_pid4, exit_code);
+            }
+
             break;
         default:
             printf("File type: unknown\n");
@@ -342,6 +452,26 @@ void display_file_info(char* path) {
 }
 
 int main(int argc, char* argv[]) {
- display_file_info(argv[1]);
-    return 0;
-}
+        for (int i = 1; i < argc; i++) {
+            pid_t child_pid1 = fork();
+            if (child_pid1 < 0) {
+                fprintf(stderr, "Failed to create child process.\n");
+                return 1;
+            } else if (child_pid1 == 0) {
+                // Child process
+                display_file_info(argv[i]);
+                exit(0);
+            }
+        }
+        // Parent process
+        int status;
+        pid_t pid;
+        while ((pid = wait(&status)) > 0) {
+            if (WIFEXITED(status)) {
+                int exit_code = WEXITSTATUS(status);
+                printf("The process with PID %d has ended with exit code %d.\n", pid, exit_code);
+            }
+        }
+    
+        return 0;
+    }
