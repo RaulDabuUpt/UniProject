@@ -48,7 +48,7 @@ void execute_script(const char* filename) {
             score = 1;
         else if (numWarnings > 10)
             score = 2;
-        else
+        else if (numWarnings =< 10)
             score = 2 + 8 * (10 - numWarnings) / 10;
 
         // Print the score
@@ -261,6 +261,7 @@ void display_regular_file_menu(char* path) {
     int i;
     int check = 1;
     char option;
+	//check '-' is first character here.
     for(i = 1; i <strlen(options); i++) {
         option = options[i];
         if(!(strchr("nhdmal", option))){
@@ -295,6 +296,7 @@ void display_directory_menu(char* path) {
     int i;
     int check = 1;
     char option;
+	//check '-' is first character here.
     for(i = 1; i <strlen(options); i++) {
         option = options[i];
         if(!(strchr("ndac", option))){
@@ -330,6 +332,7 @@ void display_symbolic_link_menu(char* path) {
     int i;
     int check = 1;
     char option;
+	//check '-' is first character here.
     for(i = 1; i <strlen(options); i++) {
         option = options[i];
         if(!(strchr("nldta", option))){
