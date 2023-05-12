@@ -19,7 +19,7 @@ void execute_script(const char* filename) {
 
     FILE* fp = popen(command, "r");
     if (fp == NULL) {
-        fprintf(stderr, "Failed to execute the script.\n");
+        print_error_message("Failed to execute the script.\n");
         exit(1);
     }
 
@@ -56,7 +56,7 @@ void execute_script(const char* filename) {
         // Write the score to grades.txt
         FILE* gradesFile = fopen("grades.txt", "a");
         if (gradesFile == NULL) {
-            fprintf(stderr, "Failed to open grades.txt for writing.\n");
+            print_error_message("Failed to open grades.txt for writing.\n");
             exit(1);
         }
         fprintf(gradesFile, "%s: %d\n", filename, score);
@@ -86,13 +86,13 @@ void create_symbolic_link(char* path) {
     char link_name[100];
     printf("Enter a name for the symbolic link: ");
     if (fgets(link_name, sizeof(link_name), stdin) == NULL) {
-        fprintf(stderr, "Failed to read input\n");
+        print_error_message("Failed to read input\n");
         return;
     }
     // Remove newline character from link_name if present
     link_name[strcspn(link_name, "\n")] = '\0';
     if (symlink(path, link_name) == -1) {
-        fprintf(stderr, "Failed to create symbolic link\n");
+        print_error_message("Failed to create symbolic link\n");
         return;
     }
     printf("Symbolic link created successfully\n");
@@ -105,7 +105,7 @@ void execute_regular_file_option(char option, char* path) {
 	
 	struct stat sb;
     if (stat(path, &sb) == -1) {
-        perror("Failed to get file information");
+        print_error_message("Failed to get file information");
     }
     switch (option) {
     case 'n' : printf("Name (-n): %s\n", path);
@@ -142,7 +142,7 @@ void execute_directory_option(char option, char* path) {
         snprintf(file_path, PATH_MAX, "%s/%s", path, dp->d_name);
 
         if (lstat(file_path, &sb) == -1) {
-            perror("Couldn't get file statistics for file in directory.");
+            print_error_message("Couldn't get file statistics for file in directory.");
             continue;
         }
 
@@ -365,49 +365,49 @@ void display_file_info(char* path) {
         case S_IFREG: // regular file
             printf("File type: regular file\n");
 			display_regular_file_menu(path);
-			 if (strstr(path, ".c") != NULL) {
-                pid_t child_pid2 = fork();
-                if (child_pid2 < 0) {
-                    fprintf(stderr, "Failed to create child process.\n");
-                    return;
-                } else if (child_pid2 == 0) {
-                    // Child process
-                    execute_script(path);
-                    exit(0);
-                }
+            pid_t child_pid2 = fork();
+            if (child_pid2 < 0) {
+                print_error_message("Failed to create child process.\n");
+                return;
+            } else if (child_pid2 == 0) {
+                // Child process
+				if (strstr(path, ".c") != NULL) {
+					execute_script(path);
+					exit(0);
+				} else {
+					// Count number of lines
+					FILE* file = fopen(path, "r");
+					if (file == NULL) {
+						print_error_message("Failed to open the file.\n");
+						return;
+					}
+
+					int lineCount = 0;
+					char ch;
+					while ((ch = fgetc(file)) != EOF) {
+						if (ch == '\n') {
+							lineCount++;
+						}
+					}
+
+					fclose(file);
+
+					printf("Number of lines: %d\n", lineCount);
+				}
                 // Parent process
                 waitpid(child_pid2, &status, 0);
                 if (WIFEXITED(status)) {
                     int exit_code = WEXITSTATUS(status);
                     printf("The process with PID %d has ended with exit code %d.\n", child_pid2, exit_code);
                 }
-            } else {
-                // Count number of lines
-                FILE* file = fopen(path, "r");
-                if (file == NULL) {
-                    fprintf(stderr, "Failed to open the file.\n");
-                    return;
-                }
 
-                int lineCount = 0;
-                char ch;
-                while ((ch = fgetc(file)) != EOF) {
-                    if (ch == '\n') {
-                        lineCount++;
-                    }
-                }
-
-                fclose(file);
-
-                printf("Number of lines: %d\n", lineCount);
-            }
             break;
         case S_IFDIR: // directory
             printf("File type: directory\n");
             display_directory_menu(path);
 			pid_t child_pid3 = fork();
             if (child_pid3 < 0) {
-                fprintf(stderr, "Failed to create child process.\n");
+                print_error_message("Failed to create child process.\n");
                 return;
             } else if (child_pid3 == 0) {
                 // Child process
@@ -431,7 +431,7 @@ void display_file_info(char* path) {
             display_symbolic_link_menu(path);
 			pid_t child_pid4 = fork();
             if (child_pid4 < 0) {
-                fprintf(stderr, "Failed to create child process.\n");
+                print_error_message("Failed to create child process.\n");
                 return;
             } else if (child_pid4 == 0) {
                 // Child process
@@ -458,7 +458,7 @@ int main(int argc, char* argv[]) {
         for (int i = 1; i < argc; i++) {
             pid_t child_pid1 = fork();
             if (child_pid1 < 0) {
-                fprintf(stderr, "Failed to create child process.\n");
+                print_error_message("Failed to create child process.\n");
                 return 1;
             } else if (child_pid1 == 0) {
                 // Child process
