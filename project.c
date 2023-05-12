@@ -16,6 +16,79 @@ void print_error_message(char* message) {
 }
 
 void execute_script(const char* filename) {
+    char *script = "./compile.sh";
+    int pipefd[2];
+    int status;
+    pid_t child_pid2;
+
+    // Create a pipe for communication between child and parent
+    if (pipe(pipefd) == -1) {
+        print_error_message("pipe");
+        return 1;
+    }
+
+    // Fork the process
+    child_pid2 = fork();
+
+    if (child_pid == -1) {
+        print_error_message("fork");
+        return 1;
+    }
+
+    if (child_pid == 0) {
+        // Child process
+        // Redirect the standard output to the write end of the pipe
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[0]);
+        close(pipefd[1]);
+
+        // Execute the compile_stats.sh script
+        execlp(script, script, filename, NULL);
+
+        // If execlp() returns, an error occurred
+        print_error_message("execlp");
+        exit(1);
+    } else {
+        // Parent process
+        close(pipefd[1]);
+        char buffer[1024];
+        int num_bytes = read(pipefd[0], buffer, sizeof(buffer));
+        buffer[num_bytes] = '\0';
+
+        // Wait for the child process to finish
+        wait(&status);
+
+        int score;
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            int errors, warnings;
+            sscanf(buffer, "Errors: %d\nWarnings: %d", &errors, &warnings);
+
+            if (errors == 0 && warnings == 0) {
+                score = 10;
+            } else if (errors > 0) {
+                score = 1;
+            } else if (warnings > 10) {
+                score = 2;
+            } else {
+                score = 2 + 8 * (10 - warnings) / 10;
+            }
+        } else {
+            score = -1; // Compilation failed
+        }
+
+        // Write the score to grades.txt
+        FILE *file = fopen("grades.txt", "a");
+        if (file == NULL) {
+            print_error_message("fopen");
+            return 1;
+        }
+
+        fprintf(file, "%s: %d\n", filename, score);
+        fclose(file);
+    }
+}
+/*
+void execute_script(const char* filename) {
     // Execute script for regular file with .c extension
     // Compile the file and print the number of errors and warnings
     char command[100];
@@ -62,7 +135,7 @@ void execute_script(const char* filename) {
     }
     pclose(fp);
 }
-
+*/
 
 void print_access_rights(mode_t mode) {
     printf("User:\n");
