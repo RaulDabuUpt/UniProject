@@ -262,6 +262,7 @@ void display_regular_file_menu(char* path) {
     int check = 1;
     char option;
 	//check '-' is first character here.
+    if(options[0]!= '-') check = 0;
     for(i = 1; i <strlen(options); i++) {
         option = options[i];
         if(!(strchr("nhdmal", option))){
@@ -296,7 +297,7 @@ void display_directory_menu(char* path) {
     int i;
     int check = 1;
     char option;
-	//check '-' is first character here.
+    if(options[0]!= '-') check = 0;
     for(i = 1; i <strlen(options); i++) {
         option = options[i];
         if(!(strchr("ndac", option))){
@@ -332,7 +333,7 @@ void display_symbolic_link_menu(char* path) {
     int i;
     int check = 1;
     char option;
-	//check '-' is first character here.
+    if(options[0]!= '-') check = 0;
     for(i = 1; i <strlen(options); i++) {
         option = options[i];
         if(!(strchr("nldta", option))){
