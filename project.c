@@ -20,13 +20,11 @@ void execute_script(const char* filename) {
     // Compile the file and print the number of errors and warnings
     char command[100];
     snprintf(command, sizeof(command), "gcc -o %s.out -Wall -Wextra %s 2>&1", filename, filename);
-	printf("Test 1 reached.");
     FILE* fp = popen(command, "r");
     if (fp == NULL) {
         print_error_message("Failed to execute the script.\n");
         exit(1);
     }
-printf("Test 2 reached.");
     char output[1000];
     if (fgets(output, sizeof(output), fp) != NULL) {
         int numErrors = 0;
@@ -43,7 +41,6 @@ printf("Test 2 reached.");
             numWarnings++;
             warningLine = strstr(warningLine + 1, "warning:");
         }
-printf("Test 3 reached.");
         // Compute the score based on the number of errors and warnings
         int score;
         if (numErrors == 0 && numWarnings == 0)
@@ -54,9 +51,6 @@ printf("Test 3 reached.");
             score = 2;
         else if (numWarnings <= 10)
             score = 2 + 8 * (10 - numWarnings) / 10;
-printf("Test 4 reached.");
-        // Print the score
-        printf("%s: %d\n", filename, score);
         // Write the score to grades.txt
         FILE* gradesFile = fopen("grades.txt", "a");
         if (gradesFile == NULL) {
@@ -66,7 +60,6 @@ printf("Test 4 reached.");
         fprintf(gradesFile, "%s: %d\n", filename, score);
         fclose(gradesFile);
     }
-printf("Test 5 reached.");
     pclose(fp);
 }
 
