@@ -402,7 +402,7 @@ void display_file_info(char* path) {
                     int exit_code = WEXITSTATUS(status);
                     printf("The process with PID %d has ended with exit code %d.\n", child_pid2, exit_code);
                 }
-
+            }
             break;
         case S_IFDIR: // directory
             printf("File type: directory\n");
