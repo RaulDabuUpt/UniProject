@@ -52,7 +52,7 @@ void execute_script(const char* filename) {
             score = 1;
         else if (numWarnings > 10)
             score = 2;
-        else if (numWarnings =< 10)
+        else if (numWarnings <= 10)
             score = 2 + 8 * (10 - numWarnings) / 10;
 
         // Print the score
