@@ -11,6 +11,10 @@
 #include <time.h>
 #include <wait.h>
 
+void print_error_message(char* message) {
+    fprintf(stderr, "Error: %s\n", message);
+}
+
 void execute_script(const char* filename) {
     // Execute script for regular file with .c extension
     // Compile the file and print the number of errors and warnings
@@ -96,9 +100,6 @@ void create_symbolic_link(char* path) {
         return;
     }
     printf("Symbolic link created successfully\n");
-}
-void print_error_message(char* message) {
-    fprintf(stderr, "Error: %s\n", message);
 }
 
 void execute_regular_file_option(char option, char* path) {
