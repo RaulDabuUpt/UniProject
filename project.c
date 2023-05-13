@@ -24,18 +24,18 @@ void execute_script(const char* filename) {
     // Create a pipe for communication between child and parent
     if (pipe(pipefd) == -1) {
         print_error_message("pipe");
-        return 1;
+        return;
     }
 
     // Fork the process
     child_pid2 = fork();
 
-    if (child_pid == -1) {
+    if (child_pid2 == -1) {
         print_error_message("fork");
-        return 1;
+        return;
     }
 
-    if (child_pid == 0) {
+    if (child_pid2 == 0) {
         // Child process
         // Redirect the standard output to the write end of the pipe
         dup2(pipefd[1], STDOUT_FILENO);
@@ -80,62 +80,13 @@ void execute_script(const char* filename) {
         FILE *file = fopen("grades.txt", "a");
         if (file == NULL) {
             print_error_message("fopen");
-            return 1;
+            return;
         }
 
         fprintf(file, "%s: %d\n", filename, score);
         fclose(file);
     }
 }
-/*
-void execute_script(const char* filename) {
-    // Execute script for regular file with .c extension
-    // Compile the file and print the number of errors and warnings
-    char command[100];
-    snprintf(command, sizeof(command), "gcc -o %s.out -Wall -Wextra %s 2>&1", filename, filename);
-    FILE* fp = popen(command, "r");
-    if (fp == NULL) {
-        print_error_message("Failed to execute the script.\n");
-        exit(1);
-    }
-    char output[1000];
-    if (fgets(output, sizeof(output), fp) != NULL) {
-        int numErrors = 0;
-        int numWarnings = 0;
-
-        // Parse the output to count errors and warnings
-        char* errorLine = strstr(output, "error:");
-        char* warningLine = strstr(output, "warning:");
-        while (errorLine != NULL) {
-            numErrors++;
-            errorLine = strstr(errorLine + 1, "error:");
-        }
-        while (warningLine != NULL) {
-            numWarnings++;
-            warningLine = strstr(warningLine + 1, "warning:");
-        }
-        // Compute the score based on the number of errors and warnings
-        int score;
-        if (numErrors == 0 && numWarnings == 0)
-            score = 10;
-        else if (numErrors > 0)
-            score = 1;
-        else if (numWarnings > 10)
-            score = 2;
-        else if (numWarnings <= 10)
-            score = 2 + 8 * (10 - numWarnings) / 10;
-        // Write the score to grades.txt
-        FILE* gradesFile = fopen("grades.txt", "a");
-        if (gradesFile == NULL) {
-            print_error_message("Failed to open grades.txt for writing.\n");
-            exit(1);
-        }
-        fprintf(gradesFile, "%s: %d\n", filename, score);
-        fclose(gradesFile);
-    }
-    pclose(fp);
-}
-*/
 
 void print_access_rights(mode_t mode) {
     printf("User:\n");
@@ -200,7 +151,7 @@ void execute_directory_option(char option, char* path) {
     int c_count = 0;
 
     if (!dir) {
-        perror("Couldn't open directory.");
+        print_error_message("Couldn't open directory.");
         return;
     }
 
