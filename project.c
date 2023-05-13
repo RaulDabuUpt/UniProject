@@ -14,7 +14,7 @@
 void print_error_message(char* message) {
     fprintf(stderr, "Error: %s\n", message);
 }
-
+/*
 void execute_script(const char* filename) {
     char *script = "./compile.sh";
     int pipefd[2];
@@ -87,8 +87,7 @@ void execute_script(const char* filename) {
         fclose(file);
     }
 }
-
-/*
+*/
 //no script version
 void execute_script(const char* filename) {
     // Execute script for regular file with .c extension
@@ -136,7 +135,6 @@ void execute_script(const char* filename) {
     }
     pclose(fp);
 }
-*/
 
 void print_access_rights(mode_t mode) {
     printf("User:\n");
