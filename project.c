@@ -203,7 +203,7 @@ void execute_symbolic_link_option(char option, char* path) {
     int delete_flag = 0;
 
     if (lstat(path, &sb) == -1) {
-        perror("lstat");
+        print_error_message("lstat");
         return;
     }
 
@@ -211,7 +211,7 @@ void execute_symbolic_link_option(char option, char* path) {
         // Get target path and size if symbolic link
         target_size = readlink(path, target_path, PATH_MAX - 1);
         if (target_size == -1) {
-            perror("readlink");
+            print_error_message("readlink");
             return;
         }
         target_path[target_size] = '\0';
@@ -226,7 +226,7 @@ void execute_symbolic_link_option(char option, char* path) {
         case 'l':
             // Delete symbolic link
             if (unlink(path) == -1) {
-                perror("unlink");
+                print_error_message("unlink");
             }
             delete_flag = 1;
             break;
@@ -243,7 +243,7 @@ void execute_symbolic_link_option(char option, char* path) {
                 return;
             }
             if (lstat(target_path, &sb) == -1) {
-                perror("lstat");
+                print_error_message("lstat");
                 return;
             }
             printf("%ld\n", sb.st_size);
